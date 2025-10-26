@@ -1,0 +1,10 @@
+
+{
+    // changeing color bar in vs to know where u working on frontend/backend
+    "workbench.colorCustomizations": {
+        "titleBar.activeBackground": "#81bbce",
+        "titleBar.activeForeground": "#FFFFFF",
+        "titleBar.inactiveBackground": "#81bbce",
+        "titleBar.inactiveForeground": "#FFFFFFCC"
+    }
+}
