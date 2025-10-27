@@ -28,3 +28,14 @@ class TrainingSession(models.Model):
     def __str__(self):
         return f"{self.training_type.capitalize()} Training - {self.created_at.strftime('%Y-%m-%d')}"
 
+
+# ProgressAnalytics model
+class ProgressAnalytics(models.Model):
+    total_sessions = models.PositiveIntegerField(default=0)
+    average_score = models.FloatField(default=0.0)
+    improvement_rate = models.FloatField(default=0.0)  # percent improvement
+    last_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Progress Analytics (Sessions: {self.total_sessions})"
+
