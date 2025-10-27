@@ -39,3 +39,20 @@ class ProgressAnalytics(models.Model):
     def __str__(self):
         return f"Progress Analytics (Sessions: {self.total_sessions})"
 
+
+# Tip model
+class Tip(models.Model):
+    TIP_TYPES = [
+        ('voice', 'Voice Tip'),
+        ('conversation', 'Conversation Tip'),
+        ('general', 'General Tip'),
+    ]
+
+    title = models.CharField(max_length=100)
+    content = models.TextField()
+    category = models.CharField(max_length=20, choices=TIP_TYPES, default='general')
+    author = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.category.capitalize()} - {self.title}"
