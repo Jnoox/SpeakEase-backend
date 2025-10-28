@@ -1,15 +1,34 @@
 from django.db import models
+from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Create your models here.
 
 
+# UserProfile model extended from User model
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    full_name = models.CharField(max_length=200, blank=True, default="")
+    # to ensure the age between 1 to 120
+    age = models.PositiveIntegerField(
+    validators=[MinValueValidator(1), MaxValueValidator(120)]
+    )
+    total_training_time = models.PositiveIntegerField(default=0)  # in seconds
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
+    
 # TrainingSession model
 class TrainingSession(models.Model):
     TRAINING_TYPES = [
         ('voice', 'Voice Training'),
         ('conversation', 'Camera Conversation'),
+        ('tips', 'Tips & Motivation')
     ]
-
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='training_sessions')
     training_type = models.CharField(max_length=20, choices=TRAINING_TYPES)
     duration = models.PositiveIntegerField(help_text="Duration in seconds")
     audio_file = models.FileField(upload_to='audio/', null=True, blank=True)
@@ -19,26 +38,48 @@ class TrainingSession(models.Model):
     # performance metrics
     repeated_words = models.PositiveIntegerField(default=0)
     mispronunciations = models.PositiveIntegerField(default=0)
-    facial_feedback_score = models.FloatField(default=0.0)
-    score = models.FloatField(null=True, blank=True)
-
+    # this ensure scores never go negative or exceed 100
+    score = models.FloatField(
+        default=0.0,
+        validators=[MinValueValidator(0.0), MaxValueValidator(100.0)]
+    )
+    facial_feedback_score = models.FloatField(
+        default=0.0,
+        validators=[MinValueValidator(0.0), MaxValueValidator(100.0)]
+    )
+    # set the confidence level
+    confidence_level = models.CharField(
+        max_length=20,
+        choices=[('low', 'Low'), ('medium', 'Medium'), ('high', 'High')],
+        default='medium'
+    )
+    eye_contact_score = models.FloatField(default=0.0)
+    engagement_level = models.CharField(
+        max_length=20,
+        choices=[('disengaged', 'Disengaged'), ('neutral', 'Neutral'), ('engaged', 'Engaged')],
+        default='neutral'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)
-
+    
+    class Meta:
+        ordering = ['-created_at']
     def __str__(self):
-        return f"{self.training_type.capitalize()} Training - {self.created_at.strftime('%Y-%m-%d')}"
-
+         return f"{self.user.username} - {self.training_type} ({self.created_at.date()})"
 
 # ProgressAnalytics model
 class ProgressAnalytics(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='progress_analytics')
     total_sessions = models.PositiveIntegerField(default=0)
     average_score = models.FloatField(default=0.0)
-    improvement_rate = models.FloatField(default=0.0)  # percent improvement
+    best_score = models.FloatField(default=0.0)
+    worst_score = models.FloatField(default=0.0)
+    improvement_rate = models.FloatField(default=0.0) 
+    total_training_time = models.PositiveIntegerField(default=0) 
     last_updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Progress Analytics (Sessions: {self.total_sessions})"
-
+        return f"Progress Analytics for {self.user.username}"
 
 # Tip model
 class Tip(models.Model):
@@ -48,11 +89,14 @@ class Tip(models.Model):
         ('general', 'General Tip'),
     ]
 
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=150)
     content = models.TextField()
     category = models.CharField(max_length=20, choices=TIP_TYPES, default='general')
-    author = models.CharField(max_length=100, blank=True)
+    author = models.CharField(max_length=100, blank=True, default="SpeakEase Team")
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.category.capitalize()} - {self.title}"
