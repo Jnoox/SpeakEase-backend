@@ -100,3 +100,20 @@ class Tip(models.Model):
 
     def __str__(self):
         return f"{self.category.capitalize()} - {self.title}"
+    
+# VocabularyWord Model (for "Describe a Word" training)
+class VocabularyWord(models.Model):
+    word = models.CharField(max_length=100, unique=True)
+    definition = models.TextField()
+    difficulty_level = models.CharField(
+        max_length=20,
+        choices=[('beginner', 'Beginner'), ('intermediate', 'Intermediate'), ('advanced', 'Advanced')],
+        default='beginner'
+    )
+    # to give user example how to use the word in good sentence 
+    example_sentence = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.word
+    
