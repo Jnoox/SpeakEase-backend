@@ -21,3 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('speakEase_backend_app.urls'))
 ]
+
+
