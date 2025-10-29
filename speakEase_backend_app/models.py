@@ -1,9 +1,11 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Create your models here.
 
+
+User = get_user_model()
 
 # UserProfile Model extended from User model
 class UserProfile(models.Model):

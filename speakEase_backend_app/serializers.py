@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from .models import TrainingSession, ProgressAnalytics, Tip
+from django.contrib.auth import get_user_model
+from .models import TrainingSession, ProgressAnalytics, Tip, UserProfile, VocabularyWord,DailyQuestion
+
+
 
 class TrainingSessionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -15,3 +18,5 @@ class TipSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tip
         fields = '__all__'
+
+
