@@ -11,3 +11,13 @@ from django.shortcuts import get_object_or_404
 # Create your views here.
 
 User = get_user_model()
+
+class TrainingSessionListCreateView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    # to get all the training sessions for the user 
+    def get(self, request):
+        sessions = TrainingSession.objects.filter(user=request.user)
+        serializer = TrainingSessionSerializer(sessions, many=True)
+        return Response(serializer.data)
