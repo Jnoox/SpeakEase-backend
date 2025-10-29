@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 # Create your models here.
 
 
-# UserProfile model extended from User model
+# UserProfile Model extended from User model
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     full_name = models.CharField(max_length=200, blank=True, default="")
@@ -20,7 +20,7 @@ class UserProfile(models.Model):
     def __str__(self):
         return f"{self.user.username}'s Profile"
     
-# TrainingSession model
+# TrainingSession Model
 class TrainingSession(models.Model):
     TRAINING_TYPES = [
         ('voice', 'Voice Training'),
@@ -67,7 +67,7 @@ class TrainingSession(models.Model):
     def __str__(self):
          return f"{self.user.username} - {self.training_type} ({self.created_at.date()})"
 
-# ProgressAnalytics model
+# ProgressAnalytics Model
 class ProgressAnalytics(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='progress_analytics')
     total_sessions = models.PositiveIntegerField(default=0)
@@ -81,7 +81,7 @@ class ProgressAnalytics(models.Model):
     def __str__(self):
         return f"Progress Analytics for {self.user.username}"
 
-# Tip model
+# Tip Model
 class Tip(models.Model):
     TIP_TYPES = [
         ('voice', 'Voice Tip'),
@@ -116,4 +116,27 @@ class VocabularyWord(models.Model):
 
     def __str__(self):
         return self.word
+    
+
+# DailyQuestion Model (for "Daily Conversation" training)
+class DailyQuestion(models.Model):
+    question = models.CharField(max_length=300)
+    category = models.CharField(
+        max_length=50,
+        choices=[('personal', 'Personal'), ('professional', 'Professional'), ('social', 'Social')],
+        default='personal'
+    )
+    difficulty_level = models.CharField(
+        max_length=20,
+        choices=[('beginner', 'Beginner'), ('intermediate', 'Intermediate'), ('advanced', 'Advanced')],
+        default='intermediate'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # for random order
+    class Meta:
+        ordering = ['?']  
+
+    def __str__(self):
+        return self.question
     
