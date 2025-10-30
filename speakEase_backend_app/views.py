@@ -75,6 +75,21 @@ class UserSignUpView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+# get all the user (just the admin)
+class AllUsersView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Get all users just by admin
+        if not request.user.is_staff:
+            return Response(
+                {'error': 'Admin access required'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
 
 class TrainingSessionListCreateView(APIView):
 
