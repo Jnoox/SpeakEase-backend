@@ -117,6 +117,24 @@ class UserProfileView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
     
+    # Delete user account
+    def delete(self, request):
+        try:
+            user = request.user
+            username = user.username
+            user.delete()
+            
+            return Response(
+                {'message': f'Account {username} deleted successfully'},
+                status=status.HTTP_204_NO_CONTENT
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+            
 # get all the user (just the admin)
 class AllUsersView(APIView):
     permission_classes = [IsAuthenticated]
