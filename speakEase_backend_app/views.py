@@ -83,6 +83,39 @@ class CurrentUserView(APIView):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    # Get user's profile info
+    def get(self, request):
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+            serializer = UserProfileSerializer(profile)
+            return Response(serializer.data)
+        except UserProfile.DoesNotExist:
+            return Response(
+                {'error': 'Profile not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+    # Update user's profile info 
+    def put(self, request):
+       
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+            serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+            
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        except UserProfile.DoesNotExist:
+            return Response(
+                {'error': 'Profile not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
     
 # get all the user (just the admin)
 class AllUsersView(APIView):
