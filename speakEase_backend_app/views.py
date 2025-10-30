@@ -14,7 +14,7 @@ User = get_user_model()
 
 # this for User SignUp
 class UserSignUpView(APIView):
-
+    
     permission_classes = [AllowAny]
     
     # to create new user 
@@ -75,6 +75,15 @@ class UserSignUpView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+# get user info
+class CurrentUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
+    
 # get all the user (just the admin)
 class AllUsersView(APIView):
     permission_classes = [IsAuthenticated]
@@ -90,6 +99,7 @@ class AllUsersView(APIView):
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
+
 
 class TrainingSessionListCreateView(APIView):
 
