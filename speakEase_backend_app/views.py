@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import TrainingSession
-from .serializers import TrainingSessionSerializer
+from .models import TrainingSession,UserProfile, ProgressAnalytics
+from .serializers import TrainingSessionSerializer, UserSerializer,UserProfileSerializer
 from rest_framework import generics,status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import get_user_model
@@ -11,6 +11,70 @@ from django.shortcuts import get_object_or_404
 # Create your views here.
 
 User = get_user_model()
+
+# this for User SignUp
+class UserSignUpView(APIView):
+
+    permission_classes = [AllowAny]
+    
+    # to create new user 
+    def post(self, request):
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
+        first_name = request.data.get('first_name', '')
+        last_name = request.data.get('last_name', '')
+        age = request.data.get('age')
+
+        # Validation
+        
+        if age:
+            age = int(age)
+            if age < 1 or age > 150:
+                return Response({'error': 'Age must be between 1 and 150'}, status=400)
+
+        if not username or not email or not password:
+            return Response(
+                {'error': 'Username, email, and password are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {'error': 'Username already exists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if User.objects.filter(email=email).exists():
+            return Response(
+                {'error': 'Email already exists'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create user
+        try:
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name
+            )
+            
+            # Create related profiles
+            UserProfile.objects.create(user=user, age=age)
+            # to connect the ProgressAnalytics with this user
+            ProgressAnalytics.objects.create(user=user)
+
+            serializer = UserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 
 class TrainingSessionListCreateView(APIView):
 

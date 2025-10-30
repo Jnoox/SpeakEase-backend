@@ -58,10 +58,10 @@ MIDDLEWARE = [
 ]
 
 # for CORS allow urls
-CORS_ALLOWED_ORIGINS = [
-    # will change in production
-    "http://localhost:5173/",
-]
+# CORS_ALLOWED_ORIGINS = [
+#     # will change in production
+#     "http://localhost:5173/",
+# ]
 
 ROOT_URLCONF = 'speakEase_backend.urls'
 
