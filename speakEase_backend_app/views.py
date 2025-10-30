@@ -110,3 +110,16 @@ class TrainingSessionListCreateView(APIView):
         sessions = TrainingSession.objects.filter(user=request.user)
         serializer = TrainingSessionSerializer(sessions, many=True)
         return Response(serializer.data)
+    
+    # Create new training session for the user
+    def post(self, request):
+        
+        data = request.data.copy()
+        data['user'] = request.user.id
+        
+        serializer = TrainingSessionSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
