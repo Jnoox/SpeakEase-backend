@@ -10,6 +10,30 @@ import torch
 import librosa
 import torch
 
+# Carnegie Mellon University Pronouncing Dictionary
+import nltk
+nltk.download('cmudict')
+nltk.download('averaged_perceptron_tagger_eng')
+from nltk.corpus import cmudict
+pronouncing_dict = cmudict.dict()
+from difflib import SequenceMatcher
+
+# phoneme generator fallback for unknown words
+from g2p_en import G2p
+g2p = G2p()
+
+def get_phonemes(word):
+    word = word.lower()
+    if word in pronouncing_dict:
+        return pronouncing_dict[word][0]  # list of phonemes
+    else:
+        # Use machine phoneme generator
+        return g2p(word)
+
+def phoneme_similarity(p1, p2):
+    """Return similarity ratio between two phoneme lists"""
+    return SequenceMatcher(None, p1, p2).ratio()
+
 # Creating a Recognizer instance
 r = sr.Recognizer()
 
@@ -97,14 +121,34 @@ def get_transcription_whisper(audio_path, model, processor, language="english", 
   transcription = processor.batch_decode(predicted_ids, skip_special_tokens=skip_special_tokens)[0]
   return transcription
 
+def detect_mispronunciations(text):
+    words = text.lower().split()
+    mispronounced = []
+
+    for word in words:
+        phonemes = get_phonemes(word)
+        # If Whisper recognized word incorrectly → phonemes far from typical
+        similarity = phoneme_similarity(phonemes, get_phonemes(word))
+
+        if similarity < 0.55:  
+            mispronounced.append(word)
+
+    return mispronounced
+
 if __name__ == "__main__":
     
-    english_transcription = get_transcription_whisper("speakEase_backend_app/test_audio/record_out.wav",
+    expected_word = "sun" 
+    
+    english_transcription = get_transcription_whisper("speakEase_backend_app/test_audio/record_out (5).wav",
                             whisper_model,
                             whisper_processor,
                             language="english",
                             skip_special_tokens=True)
     print("English transcription:", english_transcription)
+    
+    english_mis = detect_mispronunciations(english_transcription)
+    print("English Mispronounced Words:", english_mis)
+    
     arabic_transcription = get_transcription_whisper("speakEase_backend_app/test_audio/record_arabic.wav",
                           whisper_model,
                           whisper_processor,
@@ -112,3 +156,5 @@ if __name__ == "__main__":
                           skip_special_tokens=True)
     print("Arabic transcription:", arabic_transcription)
     
+    arabic_mis = detect_mispronunciations(arabic_transcription)
+    print("Arabic Mispronounced Words:", arabic_mis)
