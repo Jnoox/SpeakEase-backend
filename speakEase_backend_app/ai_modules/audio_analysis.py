@@ -64,3 +64,11 @@ class AudioAnalyzer:
             if distance > 2:
                 mispronounced_count += 1
         return mispronounced_count
+    
+    def detect_repeated_words(self, transcribed_text):
+        words = transcribed_text.lower().split()
+        stop_words = {'the', 'a', 'an', 'and', 'or', 'is', 'are', 'was', 'were', 'be', 'been', 'of', 'in', 'to', 'for'}
+        filtered_words = [w for w in words if w not in stop_words]
+        word_count = Counter(filtered_words)
+        repeated = {word: count for word, count in word_count.items() if count > 1}
+        return len(repeated)
