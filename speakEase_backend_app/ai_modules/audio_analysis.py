@@ -53,3 +53,14 @@ class AudioAnalyzer:
             return {'success': False, 'error': 'Could not understand audio. Please speak clearly.'}
         except sr.RequestError as e:
             return {'success': False, 'error': f'API error: {str(e)}'}
+        
+    def detect_mispronunciations(self, transcribed_text, expected_word):
+        transcribed_words = transcribed_text.lower().split()
+        expected_word = expected_word.lower()
+        mispronounced_count = 0
+        
+        for word in transcribed_words:
+            distance = self._levenshtein_distance(word, expected_word)
+            if distance > 2:
+                mispronounced_count += 1
+        return mispronounced_count
