@@ -98,3 +98,15 @@ class AudioAnalyzer:
             return round(pause_frequency, 2)
         except:
             return 0
+        
+    def calculate_score(self, mispronunciations, repeated_words, speech_rate, pause_frequency, duration_seconds):
+        score = 100.0
+        score -= min(mispronunciations * 5, 25)
+        score -= min(repeated_words * 3, 15)
+        if speech_rate < 100 or speech_rate > 180:
+            score -= 10
+        if pause_frequency > 30:
+            score -= 10
+        if duration_seconds >= 180:
+            score += 5
+        return round(max(0, min(100, score)), 2)
