@@ -54,3 +54,5 @@ def get_large_audio_transcription_on_silence(path):
                 whole_text += text
     # return the text for all chunks detected
     return whole_text
+
+print(get_large_audio_transcription_on_silence("speakEase_backend_app/test_audio/record_out.wav"))
