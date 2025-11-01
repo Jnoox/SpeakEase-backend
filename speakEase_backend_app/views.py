@@ -152,6 +152,7 @@ class AllUsersView(APIView):
         return Response(serializer.data)
 
 
+
 class TrainingSessionListCreateView(APIView):
 
     permission_classes = [IsAuthenticated]
