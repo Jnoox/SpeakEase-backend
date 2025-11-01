@@ -1,0 +1,22 @@
+# Python environment
+venv/
+venv310/
+env/
+ENV/
+
+# Bytecode
+__pycache__/
+*.pyc
+
+# Django media
+media/
+audio-chunks/
+
+# Logs
+*.log
+
+# VSCode
+.vscode/
+
+# Other
+*.sqlite3
