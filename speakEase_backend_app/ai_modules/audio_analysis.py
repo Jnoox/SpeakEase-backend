@@ -139,7 +139,7 @@ if __name__ == "__main__":
     
     expected_word = "sun" 
     
-    english_transcription = get_transcription_whisper("speakEase_backend_app/test_audio/record_out (5).wav",
+    english_transcription = get_transcription_whisper("speakEase_backend_app/test_audio/record_out.wav",
                             whisper_model,
                             whisper_processor,
                             language="english",
