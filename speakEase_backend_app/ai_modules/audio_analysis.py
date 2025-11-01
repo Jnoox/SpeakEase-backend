@@ -72,3 +72,15 @@ class AudioAnalyzer:
         word_count = Counter(filtered_words)
         repeated = {word: count for word, count in word_count.items() if count > 1}
         return len(repeated)
+    
+    def analyze_speech_rate(self, audio_file_path, duration_seconds):
+        try:
+            result = self.transcribe_audio(audio_file_path)
+            if result['success']:
+                word_count = len(result['text'].split())
+                duration_minutes = duration_seconds / 60 if duration_seconds > 0 else 1
+                wpm = (word_count / duration_minutes)
+                return round(wpm, 2)
+        except:
+            pass
+        return 0
