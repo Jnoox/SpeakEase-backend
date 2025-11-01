@@ -84,3 +84,17 @@ class AudioAnalyzer:
         except:
             pass
         return 0
+    
+    def analyze_pause_frequency(self, audio_file_path):
+        try:
+            y, sr_value = librosa.load(audio_file_path)
+            S = librosa.feature.melspectrogram(y=y, sr=sr_value)
+            energy = np.mean(librosa.power_to_db(S, ref=np.max), axis=0)
+            mean_energy = np.mean(energy)
+            std_energy = np.std(energy)
+            silence_threshold = mean_energy - std_energy
+            silence_count = np.sum(energy < silence_threshold)
+            pause_frequency = (silence_count / len(energy)) * 100 if len(energy) > 0 else 0
+            return round(pause_frequency, 2)
+        except:
+            return 0
