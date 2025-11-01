@@ -36,3 +36,20 @@ class AudioAnalyzer:
             'score': score,
             'feedback': feedback
         }
+        
+    def transcribe_audio(self, audio_file_path):
+        try:
+            if audio_file_path.lower().endswith('.mp3'):
+                sound = AudioSegment.from_mp3(audio_file_path)
+                wav_path = audio_file_path.replace('.mp3', '.wav')
+                sound.export(wav_path, format="wav")
+                audio_file_path = wav_path
+            
+            with sr.AudioFile(audio_file_path) as source:
+                audio = self.recognizer.record(source)
+            text = self.recognizer.recognize_google(audio)
+            return {'success': True, 'text': text}
+        except sr.UnknownValueError:
+            return {'success': False, 'error': 'Could not understand audio. Please speak clearly.'}
+        except sr.RequestError as e:
+            return {'success': False, 'error': f'API error: {str(e)}'}
