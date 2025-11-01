@@ -111,3 +111,4 @@ if __name__ == "__main__":
                           language="arabic",
                           skip_special_tokens=True)
     print("Arabic transcription:", arabic_transcription)
+    
