@@ -98,6 +98,7 @@ def get_transcription_whisper(audio_path, model, processor, language="english", 
   return transcription
 
 if __name__ == "__main__":
+    
     english_transcription = get_transcription_whisper("speakEase_backend_app/test_audio/record_out.wav",
                             whisper_model,
                             whisper_processor,
