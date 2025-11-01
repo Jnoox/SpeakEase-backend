@@ -24,7 +24,7 @@ class AudioAnalyzer:
         pause_frequency = self.analyze_pause_frequency(audio_file_path)
         
         score = self.calculate_score(mispronunciations, repeated_words, speech_rate, pause_frequency, duration_seconds)
-        feedback = self.generate_detailed_feedback(mispronunciations, repeated_words, speech_rate, pause_frequency, transcribed_text)
+        # feedback = self.generate_detailed_feedback(mispronunciations, repeated_words, speech_rate, pause_frequency, transcribed_text)
         
         return {
             'success': True,
@@ -34,7 +34,7 @@ class AudioAnalyzer:
             'speech_rate': speech_rate,
             'pause_frequency': pause_frequency,
             'score': score,
-            'feedback': feedback
+            # 'feedback': feedback
         }
         
     def transcribe_audio(self, audio_file_path):
@@ -110,3 +110,22 @@ class AudioAnalyzer:
         if duration_seconds >= 180:
             score += 5
         return round(max(0, min(100, score)), 2)
+    
+    @staticmethod
+    def _levenshtein_distance(s1, s2):
+        if len(s1) < len(s2):
+            return AudioAnalyzer._levenshtein_distance(s2, s1)
+        if len(s2) == 0:
+            return len(s1)
+        previous_row = range(len(s2) + 1)
+        for i, c1 in enumerate(s1):
+            current_row = [i + 1]
+            for j, c2 in enumerate(s2):
+                insertions = previous_row[j + 1] + 1
+                deletions = current_row[j] + 1
+                substitutions = previous_row[j] + (c1 != c2)
+                current_row.append(min(insertions, deletions, substitutions))
+            previous_row = current_row
+        return previous_row[-1]
+    
+    
