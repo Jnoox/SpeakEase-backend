@@ -12,6 +12,8 @@ import torch
 
 import mutagen
 from mutagen.wave import WAVE
+from collections import Counter
+
 
 # Carnegie Mellon University Pronouncing Dictionary
 import nltk
@@ -165,6 +167,32 @@ def get_audio_duration(audio_path):
         print(f"Error reading audio: {e}")
         return 0, 0, 0
 
+def detect_repeated_words(transcribed_text):
+    """Detect repeated words using Counter"""
+    words = transcribed_text.lower().split()
+    
+    # Common stop words to ignore
+    stop_words = {'the', 'a', 'an', 'and', 'or', 'is', 'are', 'was', 'were', 
+                  'be', 'been', 'of', 'in', 'to', 'for', 'i', 'you', 'he', 'she', 'it'}
+    
+    # Remove stop words and punctuation
+    filtered_words = []
+    for word in words:
+        word_clean = word.lower().strip('.,!?;:')
+        if word_clean not in stop_words and word_clean:
+            filtered_words.append(word_clean)
+    
+    # Count word frequencies
+    word_counts = Counter(filtered_words)
+    
+    # Get words that appear more than once
+    repeated_words = {word: count for word, count in word_counts.items() if count > 1}
+    
+    return {
+        'repeated_words': repeated_words,
+        'total_repeated': len(repeated_words),
+        'all_word_counts': word_counts
+    }
     
     # # Compare each transcribed word against the expected word
     # for word in transcribed_words:
@@ -202,14 +230,14 @@ if __name__ == "__main__":
     
     # expected_word = "sun" 
     
-    english_transcription = get_transcription_whisper("speakEase_backend_app/test_audio/record_out.wav",
+    english_transcription = get_transcription_whisper("speakEase_backend_app/test_audio/record_out (6).wav",
                             whisper_model,
                             whisper_processor,
                             language="english",
                             skip_special_tokens=True)
     print("English transcription:", english_transcription)
     
-    hours, mins, seconds = get_audio_duration("speakEase_backend_app/test_audio/record_out.wav")
+    hours, mins, seconds = get_audio_duration("speakEase_backend_app/test_audio/record_out (6).wav")
     print(f'Total Duration: {hours}:{mins}:{seconds}')
     
     english_mis = detect_mispronunciations(english_transcription)
@@ -217,6 +245,12 @@ if __name__ == "__main__":
     print("Valid Words:", english_mis['valid_words'])
     print("Total Words:", english_mis['total_words'])
     print("Mispronunciation Count:", english_mis['mispronunciation_count'])
+    
+    english_repeated = detect_repeated_words(english_transcription)
+    print("Repeated Words:", english_repeated['repeated_words'])
+    print("Total Repeated Words:", english_repeated['total_repeated'])
+    
+    print("\n" + "="*50 + "\n")
     
     arabic_transcription = get_transcription_whisper("speakEase_backend_app/test_audio/record_arabic.wav",
                           whisper_model,
