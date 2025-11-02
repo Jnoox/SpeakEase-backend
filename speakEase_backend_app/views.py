@@ -7,7 +7,9 @@ from rest_framework import generics,status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from .ai_modules import audio_analyzer, video_analyzer
+from .ai_modules import audio_analyzer
+import os
+from rest_framework.parsers import MultiPartParser, FormParser
 
 # Create your views here.
 
@@ -153,7 +155,21 @@ class AllUsersView(APIView):
         return Response(serializer.data)
 
 
+# for analysis the file upload
+class VoiceTrainingCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser)
 
+    def post(self, request):
+        
+            audio_file = request.FILES.get('audio_file')
+            training_type = request.data.get('training_type', 'voice')
+            duration = int(request.data.get('duration', 0))
+            word = request.data.get('word', '')
+            
+            
+            
 class TrainingSessionListCreateView(APIView):
 
     permission_classes = [IsAuthenticated]
@@ -176,3 +192,4 @@ class TrainingSessionListCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
