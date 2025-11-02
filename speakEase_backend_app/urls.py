@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import TrainingSessionView, UserSignUpView, AllUsersView, CurrentUserView, UserProfileView, VoiceTrainingView, TrainingSessionDetailView
+from .views import TrainingSessionView, UserSignUpView, AllUsersView, CurrentUserView, UserProfileView, VoiceTrainingView, TrainingSessionDetailView, VocabularyView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 urlpatterns = [
@@ -12,5 +12,6 @@ urlpatterns = [
    path('training/voice/', VoiceTrainingView.as_view(), name='voice-training'), 
    path('training-sessions/', TrainingSessionView.as_view(), name='training-sessions-list'),
    path('training-sessions/<int:session_id>/', TrainingSessionDetailView.as_view(), name='training-session-detail'),
+   path('vocabulary/', VocabularyView.as_view(), name='vocabulary'),
 
 ]

@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import TrainingSession,UserProfile, ProgressAnalytics
-from .serializers import TrainingSessionSerializer, UserSerializer,UserProfileSerializer
+from .models import TrainingSession,UserProfile, ProgressAnalytics, VocabularyWord
+from .serializers import TrainingSessionSerializer, UserSerializer,UserProfileSerializer, VocabularyWordSerializer
 from rest_framework import generics,status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import get_user_model
@@ -167,6 +167,7 @@ class VoiceTrainingView(APIView):
             training_type = request.data.get('training_type', 'voice')
             duration = int(request.data.get('duration', 0))
             word = request.data.get('word', '')
+            
             if not audio_file:
                 return Response({'Audio file is required'}, status=status.HTTP_400_BAD_REQUEST)
             if duration <= 0:
@@ -214,6 +215,7 @@ class VoiceTrainingView(APIView):
                 'analysis': {
                     'wpm': analysis_result.get('wpm'),
                     'rating': analysis_result.get('rating'),
+                    'word_practiced': word,
                 }
             }
             
@@ -275,3 +277,15 @@ class TrainingSessionDetailView(APIView):
         session.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+# to get one random word for the voice training 
+class VocabularyView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        word = VocabularyWord.objects.order_by('?').first()
+        
+        if not word:
+            return Response({'error': 'No words'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = VocabularyWordSerializer(word)
+        return Response(serializer.data)
