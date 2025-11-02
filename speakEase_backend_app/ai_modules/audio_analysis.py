@@ -1,5 +1,5 @@
 # source helper https://thepythoncode.com/article/speech-recognition-in-python
-
+# https://www.geeksforgeeks.org/python/how-to-get-the-duration-of-audio-in-python/
 import speech_recognition as sr
 import os 
 from pydub import AudioSegment
@@ -9,6 +9,9 @@ from transformers import WhisperProcessor, WhisperForConditionalGeneration
 import torch
 import librosa
 import torch
+
+import mutagen
+from mutagen.wave import WAVE
 
 # Carnegie Mellon University Pronouncing Dictionary
 import nltk
@@ -135,10 +138,10 @@ def detect_mispronunciations(transcribed_text):
     for word in transcribed_words:
         word_clean = word.lower().strip('.,!?;:')
         
-    if word_clean not in pronouncing_dict:
-        mispronounced.append(word_clean)
-    else:
-        valid_words.append(word_clean)
+        if word_clean not in pronouncing_dict:
+            mispronounced.append(word_clean) 
+        else:
+            valid_words.append(word_clean)
             
     return {
         'mispronounced_words': mispronounced,
@@ -146,6 +149,22 @@ def detect_mispronunciations(transcribed_text):
         'total_words': len(transcribed_words),
         'mispronunciation_count': len(mispronounced)
     }
+    
+def get_audio_duration(audio_path):
+    try:
+        y, sr_val = librosa.load(audio_path)
+        length = librosa.get_duration(y=y, sr=sr_val)  # in seconds
+        
+        hours = int(length // 3600)
+        remaining = length % 3600
+        mins = int(remaining // 60)
+        seconds = int(remaining % 60)
+        
+        return hours, mins, seconds
+    except Exception as e:
+        print(f"Error reading audio: {e}")
+        return 0, 0, 0
+
     
     # # Compare each transcribed word against the expected word
     # for word in transcribed_words:
@@ -189,6 +208,9 @@ if __name__ == "__main__":
                             language="english",
                             skip_special_tokens=True)
     print("English transcription:", english_transcription)
+    
+    hours, mins, seconds = get_audio_duration("speakEase_backend_app/test_audio/record_out.wav")
+    print(f'Total Duration: {hours}:{mins}:{seconds}')
     
     english_mis = detect_mispronunciations(english_transcription)
     print("English Mispronounced Words:", english_mis['mispronounced_words'])
