@@ -121,57 +121,67 @@ def get_transcription_whisper(audio_path, model, processor, language="english", 
   transcription = processor.batch_decode(predicted_ids, skip_special_tokens=skip_special_tokens)[0]
   return transcription
 
-def detect_mispronunciations(english_transcription, expected_word):
-    transcribed_words = transcribed_words.lower().split()
-    expected_word = expected_word.lower()
+def detect_mispronunciations(transcribed_text):
+    transcribed_words = transcribed_text.lower().split()
+    # expected_word = expected_word.lower()
     
     # Get phonemes for expected word
-    expected_phonemes = get_phonemes(expected_word)
+    # expected_phonemes = get_phonemes(expected_word)
     
-    results = {
-        'mispronounced': False,
-        'transcribed_words': transcribed_words,
-        'similarity_scores': {},
-        'closest_match': None,
-        'highest_similarity': 0.0,
-        'feedback': ''
+    mispronounced = []
+    valid_words = []
+    
+    # Check each word against CMU dictionary
+    for word in transcribed_words:
+        word_clean = word.lower().strip('.,!?;:')
+        
+    if word_clean not in pronouncing_dict:
+        mispronounced.append(word_clean)
+    else:
+        valid_words.append(word_clean)
+            
+    return {
+        'mispronounced_words': mispronounced,
+        'valid_words': valid_words,
+        'total_words': len(transcribed_words),
+        'mispronunciation_count': len(mispronounced)
     }
     
-    # Compare each transcribed word against the expected word
-    for word in transcribed_words:
-        transcribed_phonemes = get_phonemes(word)
-        similarity = phoneme_similarity(expected_phonemes, transcribed_phonemes)
+    # # Compare each transcribed word against the expected word
+    # for word in transcribed_words:
+    #     transcribed_phonemes = get_phonemes(word)
+    #     similarity = phoneme_similarity(expected_phonemes, transcribed_phonemes)
         
-        # Store similarity score for this word
-        results['similarity_scores'][word] = round(similarity, 2)
+    #     # Store similarity score for this word
+    #     results['similarity_scores'][word] = round(similarity, 2)
         
-        # Track the closest match
-        if similarity > results['highest_similarity']:
-            results['highest_similarity'] = similarity
-            results['closest_match'] = word
+    #     # Track the closest match
+    #     if similarity > results['highest_similarity']:
+    #         results['highest_similarity'] = similarity
+    #         results['closest_match'] = word
     
-    # Determine if mispronounced (threshold: 0.55)
-    MISPRONUNCIATION_THRESHOLD = 0.55
+    # # Determine if mispronounced (threshold: 0.55)
+    # MISPRONUNCIATION_THRESHOLD = 0.55
     
-    if results['highest_similarity'] < MISPRONUNCIATION_THRESHOLD:
-        results['mispronounced'] = True
-        results['feedback'] = (
-            f"❌ Expected '{expected_word}' but got '{results['closest_match']}' "
-            f"(similarity: {results['highest_similarity']}). "
-            f"Try pronouncing it more clearly."
-        )
-    else:
-        results['mispronounced'] = False
-        results['feedback'] = (
-            f"✓ Good pronunciation! '{expected_word}' matches "
-            f"'{results['closest_match']}' (similarity: {results['highest_similarity']})"
-        )
+    # if results['highest_similarity'] < MISPRONUNCIATION_THRESHOLD:
+    #     results['mispronounced'] = True
+    #     results['feedback'] = (
+    #         f"Expected '{expected_word}' but got '{results['closest_match']}' "
+    #         f"(similarity: {results['highest_similarity']}). "
+    #         f"Try pronouncing it more clearly."
+    #     )
+    # else:
+    #     results['mispronounced'] = False
+    #     results['feedback'] = (
+    #         f"Good pronunciation! '{expected_word}' matches "
+    #         f"'{results['closest_match']}' (similarity: {results['highest_similarity']})"
+    #     )
     
-    return results
+    # return results
 
 if __name__ == "__main__":
     
-    expected_word = "sun" 
+    # expected_word = "sun" 
     
     english_transcription = get_transcription_whisper("speakEase_backend_app/test_audio/record_out.wav",
                             whisper_model,
@@ -180,8 +190,11 @@ if __name__ == "__main__":
                             skip_special_tokens=True)
     print("English transcription:", english_transcription)
     
-    english_mis = detect_mispronunciations(english_transcription , expected_word)
-    print("English Mispronounced Words:", english_mis)
+    english_mis = detect_mispronunciations(english_transcription)
+    print("English Mispronounced Words:", english_mis['mispronounced_words'])
+    print("Valid Words:", english_mis['valid_words'])
+    print("Total Words:", english_mis['total_words'])
+    print("Mispronunciation Count:", english_mis['mispronunciation_count'])
     
     arabic_transcription = get_transcription_whisper("speakEase_backend_app/test_audio/record_arabic.wav",
                           whisper_model,
