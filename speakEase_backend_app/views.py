@@ -167,7 +167,23 @@ class VoiceTrainingCreateView(APIView):
             training_type = request.data.get('training_type', 'voice')
             duration = int(request.data.get('duration', 0))
             word = request.data.get('word', '')
+            if not audio_file:
+                return Response({'Audio file is required'}, status=status.HTTP_400_BAD_REQUEST)
+            if duration <= 0:
+                return Response({'Duration must be greater than 0'}, status=status.HTTP_400_BAD_REQUEST)
             
+            temp_audio_path = f'/tmp/{audio_file.name}'
+            with open(temp_audio_path, 'wb+') as destination:
+                for chunk in audio_file.chunks():
+                    destination.write(chunk)
+            
+            analysis_result = audio_analyzer.calculate_overall_score(
+                transcribed_text=audio_analyzer.transcribe_audio(temp_audio_path)['text'],
+                audio_duration_seconds=duration,
+                audio_path=temp_audio_path
+            )
+            
+           
             
             
 class TrainingSessionListCreateView(APIView):
