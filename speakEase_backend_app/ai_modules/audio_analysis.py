@@ -1,5 +1,7 @@
 # source helper https://thepythoncode.com/article/speech-recognition-in-python
 # https://www.geeksforgeeks.org/python/how-to-get-the-duration-of-audio-in-python/
+# https://shahabks.github.io/my-voice-analysis/
+
 import speech_recognition as sr
 import os 
 from pydub import AudioSegment
@@ -51,52 +53,12 @@ def transcribe_audio(path):
         text = r.recognize_google(audio_listened)
     return text
 
-# def get_large_audio_transcription_on_silence(path):
-#      # open the audio file using pydub
-#     sound = AudioSegment.from_file(path)  
-#     # split audio sound where silence is 700 miliseconds or more and get chunks
-#     chunks = split_on_silence(sound,
-#         # experiment with this value for your target audio file
-#         min_silence_len = 500,
-#         # adjust this per requirement
-#         silence_thresh = sound.dBFS-14,
-#         # keep the silence for 1 second, adjustable as well
-#         keep_silence=500,
-#     )
-#     folder_name = "audio-chunks"
-#     # create a directory to store the audio chunks
-#     if not os.path.isdir(folder_name):
-#         os.mkdir(folder_name)
-#     whole_text = ""
-#     # process each chunk 
-#     for i, audio_chunk in enumerate(chunks, start=1):
-#         # export audio chunk and save it in
-#         # the `folder_name` directory.
-#         chunk_filename = os.path.join(folder_name, f"chunk{i}.wav")
-#         audio_chunk.export(chunk_filename, format="wav")
-#         # recognize the chunk
-#         with sr.AudioFile(chunk_filename) as source:
-#             audio_listened = r.record(source)
-#             # try converting it to text
-#             try:
-#                 text = r.recognize_google(audio_listened)
-#             except sr.UnknownValueError as e:
-#                 print("Error:", str(e))
-#             else:
-#                 text = f"{text.capitalize()}. "
-#                 print(chunk_filename, ":", text)
-#                 whole_text += text
-#     # return the text for all chunks detected
-#     return whole_text
-
-# print(get_large_audio_transcription_on_silence("speakEase_backend_app/test_audio/record_out.wav"))
-
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 # whisper_model_name = "openai/whisper-tiny.en" # English-only, ~ 151 MB
 # whisper_model_name = "openai/whisper-base.en" # English-only, ~ 290 MB
 # whisper_model_name = "openai/whisper-small.en" # English-only, ~ 967 MB
 # whisper_model_name = "openai/whisper-medium.en" # English-only, ~ 3.06 GB
-whisper_model_name = "openai/whisper-small" 
+whisper_model_name = "openai/whisper-medium" 
 # whisper_model_name = "openai/whisper-base" # multilingual, ~ 290 MB
 # whisper_model_name = "openai/whisper-small" # multilingual, ~ 967 MB
 # whisper_model_name = "openai/whisper-medium" # multilingual, ~ 3.06 GB
@@ -128,10 +90,6 @@ def get_transcription_whisper(audio_path, model, processor, language="english", 
 
 def detect_mispronunciations(transcribed_text):
     transcribed_words = transcribed_text.lower().split()
-    # expected_word = expected_word.lower()
-    
-    # Get phonemes for expected word
-    # expected_phonemes = get_phonemes(expected_word)
     
     mispronounced = []
     valid_words = []
@@ -194,37 +152,128 @@ def detect_repeated_words(transcribed_text):
         'all_word_counts': word_counts
     }
     
-    # # Compare each transcribed word against the expected word
-    # for word in transcribed_words:
-    #     transcribed_phonemes = get_phonemes(word)
-    #     similarity = phoneme_similarity(expected_phonemes, transcribed_phonemes)
-        
-    #     # Store similarity score for this word
-    #     results['similarity_scores'][word] = round(similarity, 2)
-        
-    #     # Track the closest match
-    #     if similarity > results['highest_similarity']:
-    #         results['highest_similarity'] = similarity
-    #         results['closest_match'] = word
+# Calculate speech rate (words per minute - WPM)
+def calculate_speech_rate(transcribed_text, audio_duration_seconds):
+    # Count words in transcription
+    words = transcribed_text.lower().split()
+    word_count = len(words)
     
-    # # Determine if mispronounced (threshold: 0.55)
-    # MISPRONUNCIATION_THRESHOLD = 0.55
+    # Convert duration from seconds to minutes
+    duration_minutes = audio_duration_seconds / 60
     
-    # if results['highest_similarity'] < MISPRONUNCIATION_THRESHOLD:
-    #     results['mispronounced'] = True
-    #     results['feedback'] = (
-    #         f"Expected '{expected_word}' but got '{results['closest_match']}' "
-    #         f"(similarity: {results['highest_similarity']}). "
-    #         f"Try pronouncing it more clearly."
-    #     )
-    # else:
-    #     results['mispronounced'] = False
-    #     results['feedback'] = (
-    #         f"Good pronunciation! '{expected_word}' matches "
-    #         f"'{results['closest_match']}' (similarity: {results['highest_similarity']})"
-    #     )
+    # Calculate WPM (words per minute)
+    if duration_minutes > 0:
+        wpm = word_count / duration_minutes
+    else:
+        wpm = 0
     
-    # return results
+    if wpm < 120:
+        speed_category = "Slow"
+    elif wpm <= 150:
+        speed_category = "Normal"
+    else:
+        speed_category = "Fast"
+    
+    return {
+        'word_count': word_count,
+        'duration_seconds': audio_duration_seconds,
+        'duration_minutes': round(duration_minutes, 2),
+        'wpm': round(wpm, 2),
+        'speed_category': speed_category
+    }
+
+# Calculate overall score 0-100
+# Source helper : https://stackoverflow.com/questions/27337331/how-do-i-make-a-score-counter-in-python
+def calculate_overall_score(transcribed_text, audio_duration_seconds):
+    score = 100.0
+    
+    # Get metrics
+    mis = detect_mispronunciations(transcribed_text)
+    rep = detect_repeated_words(transcribed_text)
+    sr = calculate_speech_rate(transcribed_text, audio_duration_seconds)
+    
+
+    mis_pct = (mis['mispronunciation_count'] / mis['total_words'] * 100) if mis['total_words'] > 0 else 0
+    if mis_pct > 25:
+        score -= 30
+    elif mis_pct > 10:
+        score -= 15
+    elif mis_pct > 0:
+        score -= 5
+    
+
+    wpm = sr['wpm']
+    if wpm < 100 or wpm > 170:
+        score -= 15
+    elif wpm < 120 or wpm > 150:
+        score -= 5
+    
+    
+    if rep['total_repeated'] > 5:
+        score -= 15
+    elif rep['total_repeated'] > 2:
+        score -= 10
+    elif rep['total_repeated'] > 0:
+        score -= 5
+    
+    
+    if audio_duration_seconds > 0:
+        ratio = mis['total_words'] / audio_duration_seconds
+        if ratio < 2.0:
+            score -= 10
+        elif ratio < 2.5:
+            score -= 5
+    
+    final_score = max(0, min(100, score))
+    
+    
+    feedback = []
+    
+    if mis_pct == 0:
+        feedback.append("Perfect pronunciation ✓")
+    elif mis_pct < 10:
+        feedback.append("Good pronunciation ✓")
+    elif mis_pct < 25:
+        feedback.append("Work on pronunciation clarity ⚠")
+    else:
+        feedback.append("Practice pronunciation more ❌")
+    
+    if 120 <= wpm <= 150:
+        feedback.append("Good speech rate ✓")
+    elif wpm < 120:
+        feedback.append("Speak faster (aim for 120-150 WPM) ⚠")
+    else:
+        feedback.append("Slow down (aim for 120-150 WPM) ⚠")
+    
+    if rep['total_repeated'] == 0:
+        feedback.append("Good vocabulary variation ✓")
+    elif rep['total_repeated'] <= 2:
+        feedback.append("Decent vocabulary ✓")
+    elif rep['total_repeated'] <= 5:
+        feedback.append("Use more varied vocabulary ⚠")
+    else:
+        feedback.append("Reduce word repetition ❌")
+    
+    if final_score >= 90:
+        rating = "Excellent 🌟"
+    elif final_score >= 75:
+        rating = "Good 👍"
+    elif final_score >= 60:
+        rating = "Fair 👌"
+    elif final_score >= 45:
+        rating = "Needs Improvement ⚠️"
+    else:
+        rating = "Poor ❌"
+    
+    return {
+        'score': round(final_score, 2),
+        'rating': rating,
+        'feedback': " | ".join(feedback),
+        'mis_pct': round(mis_pct, 2),
+        'wpm': wpm,
+        'repeated': rep['total_repeated']
+    }
+    
 
 if __name__ == "__main__":
     
@@ -250,14 +299,43 @@ if __name__ == "__main__":
     print("Repeated Words:", english_repeated['repeated_words'])
     print("Total Repeated Words:", english_repeated['total_repeated'])
     
+    total_seconds = (hours * 3600) + (mins * 60) + seconds
+    
+    english_speech_rate = calculate_speech_rate(english_transcription, total_seconds)
+    print(f"Speech Rate: {english_speech_rate['wpm']} WPM ({english_speech_rate['speed_category']})")
+    print(f"Words: {english_speech_rate['word_count']} | Duration: {english_speech_rate['duration_minutes']} minutes")
+    
+    english_score = calculate_overall_score(english_transcription, total_seconds)
+    print(f"\nOVERALL SCORE: {english_score['score']}/100 - {english_score['rating']}")
+    print(f"Feedback: {english_score['feedback']}")
+    
     print("\n" + "="*50 + "\n")
     
-    arabic_transcription = get_transcription_whisper("speakEase_backend_app/test_audio/record_arabic.wav",
-                          whisper_model,
-                          whisper_processor,
-                          language="arabic",
-                          skip_special_tokens=True)
-    print("Arabic transcription:", arabic_transcription)
+    # arabic_transcription = get_transcription_whisper("speakEase_backend_app/test_audio/record_arabic.wav",
+    #                       whisper_model,
+    #                       whisper_processor,
+    #                       language="arabic",
+    #                       skip_special_tokens=True)
+    # print("Arabic transcription:", arabic_transcription)
     
-    arabic_mis = detect_mispronunciations(arabic_transcription)
-    print("Arabic Mispronounced Words:", arabic_mis)
+    # arabic_mis = detect_mispronunciations(arabic_transcription)
+    # print("Arabic Mispronounced Words:", arabic_mis['mispronounced_words'])
+    # print("Valid Words:", arabic_mis['valid_words'])
+    # print("Total Words:", arabic_mis['total_words'])
+    # print("Mispronunciation Count:", arabic_mis['mispronunciation_count'])
+    
+    # arabic_repeated = detect_repeated_words(arabic_transcription)
+    # print("Repeated Words:", arabic_repeated['repeated_words'])
+    # print("Total Repeated Words:", arabic_repeated['total_repeated'])
+    
+    # total_seconds = (hours * 3600) + (mins * 60) + seconds
+    
+    # arabic_speech_rate = calculate_speech_rate(arabic_transcription, total_seconds)
+    # print(f"Speech Rate: {arabic_speech_rate['wpm']} WPM ({arabic_speech_rate['speed_category']})")
+    # print(f"Words: {arabic_speech_rate['word_count']} | Duration: {arabic_speech_rate['duration_minutes']} minutes")
+    
+    # arabic_score = calculate_overall_score(arabic_transcription, total_seconds)
+    # print(f"\nOVERALL SCORE: {arabic_score['score']}/100 - {arabic_score['rating']}")
+    # print(f"Feedback: {arabic_score['feedback']}")
+    
+    # print("\n" + "="*50 + "\n")
