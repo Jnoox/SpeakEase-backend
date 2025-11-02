@@ -172,18 +172,58 @@ class VoiceTrainingCreateView(APIView):
             if duration <= 0:
                 return Response({'Duration must be greater than 0'}, status=status.HTTP_400_BAD_REQUEST)
             
+            # save the file 
             temp_audio_path = f'/tmp/{audio_file.name}'
             with open(temp_audio_path, 'wb+') as destination:
                 for chunk in audio_file.chunks():
                     destination.write(chunk)
             
+            # audio analysis transcript
             analysis_result = audio_analyzer.calculate_overall_score(
                 transcribed_text=audio_analyzer.transcribe_audio(temp_audio_path)['text'],
                 audio_duration_seconds=duration,
                 audio_path=temp_audio_path
             )
             
-           
+            if not analysis_result:
+                return Response({'Analysis failed'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # it create new TrainingSession save the data to db
+            training_session = TrainingSession.objects.create(
+                # link session to the user 
+                user=request.user,
+                training_type=training_type,
+                duration=duration,
+                audio_file=audio_file,
+                score=analysis_result['score'],
+                mispronunciations=analysis_result.get('mis_pct', 0),
+                repeated_words=analysis_result.get('repeated', 0),
+                feedback_text=analysis_result['feedback'],
+                transcribed_text=audio_analyzer.transcribe_audio(temp_audio_path).get('text', '')
+            )
+            
+            profile = UserProfile.objects.get(user=request.user)
+            # add to the total_training_time the duration
+            profile.total_training_time += duration
+            # and save it to the db
+            profile.save()
+            
+            serializer = TrainingSessionSerializer(training_session)
+            response_data = {
+                **serializer.data,
+                'analysis': {
+                    'wpm': analysis_result.get('wpm'),
+                    'rating': analysis_result.get('rating'),
+                }
+            }
+            
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        
+     
+            
+            
+            
+            
             
             
 class TrainingSessionListCreateView(APIView):
