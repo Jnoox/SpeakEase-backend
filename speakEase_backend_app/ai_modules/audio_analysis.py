@@ -6,6 +6,7 @@ import speech_recognition as sr
 import os 
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
+import numpy as np
 
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
 import torch
@@ -29,17 +30,17 @@ from difflib import SequenceMatcher
 from g2p_en import G2p
 g2p = G2p()
 
-def get_phonemes(word):
-    word = word.lower()
-    if word in pronouncing_dict:
-        return pronouncing_dict[word][0]  # list of phonemes
-    else:
-        # Use machine phoneme generator
-        return g2p(word)
+# def get_phonemes(word):
+#     word = word.lower()
+#     if word in pronouncing_dict:
+#         return pronouncing_dict[word][0]  # list of phonemes
+#     else:
+#         # Use machine phoneme generator
+#         return g2p(word)
 
-def phoneme_similarity(p1, p2):
-    """Return similarity ratio between two phoneme lists"""
-    return SequenceMatcher(None, p1, p2).ratio()
+# def phoneme_similarity(p1, p2):
+#     """Return similarity ratio between two phoneme lists"""
+#     return SequenceMatcher(None, p1, p2).ratio()
 
 # Creating a Recognizer instance
 r = sr.Recognizer()
@@ -181,17 +182,41 @@ def calculate_speech_rate(transcribed_text, audio_duration_seconds):
         'wpm': round(wpm, 2),
         'speed_category': speed_category
     }
+    
+
+def detect_pauses(audio_path, threshold=0.01):
+    try:
+        # Load audio file
+        y, sr_val = librosa.load(audio_path)
+        energy = librosa.feature.rms(y=y)
+        
+        silence_indices = np.where(energy < threshold)[1]
+        silence_times = librosa.frames_to_time(silence_indices, sr=sr_val)
+        frame_duration = librosa.get_duration(y=y, sr=sr_val) / len(energy[0])
+        
+        total_silence_time = round(frame_duration * len(silence_times), 2)
+        total_audio_time = len(y) / sr_val
+        pauses_percentage = round((total_silence_time / total_audio_time) * 100, 2)
+        
+        return {
+            'total_silence_time': total_silence_time,
+            'total_audio_time': total_audio_time,
+            'pauses_percentage': pauses_percentage
+        }
+    except Exception as e:
+        print(f"Error detecting pauses: {e}")
+        return None
 
 # Calculate overall score 0-100
 # Source helper : https://stackoverflow.com/questions/27337331/how-do-i-make-a-score-counter-in-python
-def calculate_overall_score(transcribed_text, audio_duration_seconds):
+def calculate_overall_score(transcribed_text, audio_duration_seconds, audio_path):
     score = 100.0
     
     # Get metrics
     mis = detect_mispronunciations(transcribed_text)
     rep = detect_repeated_words(transcribed_text)
     sr = calculate_speech_rate(transcribed_text, audio_duration_seconds)
-    
+    pa = detect_pauses(audio_path) 
 
     mis_pct = (mis['mispronunciation_count'] / mis['total_words'] * 100) if mis['total_words'] > 0 else 0
     if mis_pct > 25:
@@ -216,7 +241,15 @@ def calculate_overall_score(transcribed_text, audio_duration_seconds):
     elif rep['total_repeated'] > 0:
         score -= 5
     
-    
+    if pa:
+        pauses = pa['pauses_percentage']
+    if pauses > 30:
+        score -= 10  
+    elif pauses > 15:
+        score -= 5   
+    elif pauses > 5:
+        score -= 2   
+            
     if audio_duration_seconds > 0:
         ratio = mis['total_words'] / audio_duration_seconds
         if ratio < 2.0:
@@ -253,6 +286,17 @@ def calculate_overall_score(transcribed_text, audio_duration_seconds):
         feedback.append("Use more varied vocabulary ⚠")
     else:
         feedback.append("Reduce word repetition ❌")
+        
+    if pa:
+        pauses = pa['pauses_percentage']
+        if pauses <= 5:
+            feedback.append("Good pause control ✓")
+        elif pauses <= 15:
+            feedback.append("Decent pause usage ✓")
+        elif pauses <= 30:
+            feedback.append("Reduce excessive pauses ⚠")
+        else:
+            feedback.append("Too many pauses, work on fluency ❌")
     
     if final_score >= 90:
         rating = "Excellent 🌟"
@@ -271,7 +315,8 @@ def calculate_overall_score(transcribed_text, audio_duration_seconds):
         'feedback': " | ".join(feedback),
         'mis_pct': round(mis_pct, 2),
         'wpm': wpm,
-        'repeated': rep['total_repeated']
+        'repeated': rep['total_repeated'],
+        'pauses_percentage': pa['pauses_percentage'] if pa else 0
     }
     
 
@@ -287,25 +332,39 @@ if __name__ == "__main__":
     print("English transcription:", english_transcription)
     
     hours, mins, seconds = get_audio_duration("speakEase_backend_app/test_audio/record_out (6).wav")
+    print("\n=== Audio_Duration ANALYSIS ===")
     print(f'Total Duration: {hours}:{mins}:{seconds}')
     
     english_mis = detect_mispronunciations(english_transcription)
+    print("\n=== Mispronunciations ANALYSIS ===")
     print("English Mispronounced Words:", english_mis['mispronounced_words'])
     print("Valid Words:", english_mis['valid_words'])
     print("Total Words:", english_mis['total_words'])
     print("Mispronunciation Count:", english_mis['mispronunciation_count'])
     
     english_repeated = detect_repeated_words(english_transcription)
+    print("\n=== Repeated Words ANALYSIS ===")
     print("Repeated Words:", english_repeated['repeated_words'])
     print("Total Repeated Words:", english_repeated['total_repeated'])
+    
+    pause_analysis = detect_pauses("speakEase_backend_app/test_audio/record_out (6).wav", threshold=0.01)
+    if pause_analysis:
+        print("\n=== Pause/Silence ANALYSIS ===")
+        print(f"Silence time (seconds): {pause_analysis['total_silence_time']}")
+        print(f"Audio time (seconds): {pause_analysis['total_audio_time']}")
+        print(f"Pauses Percentage is: {pause_analysis['pauses_percentage']}%")
+    
     
     total_seconds = (hours * 3600) + (mins * 60) + seconds
     
     english_speech_rate = calculate_speech_rate(english_transcription, total_seconds)
+    print("\n=== Speech Rate ANALYSIS ===")
     print(f"Speech Rate: {english_speech_rate['wpm']} WPM ({english_speech_rate['speed_category']})")
     print(f"Words: {english_speech_rate['word_count']} | Duration: {english_speech_rate['duration_minutes']} minutes")
     
-    english_score = calculate_overall_score(english_transcription, total_seconds)
+    audio_path = "speakEase_backend_app/test_audio/record_out (6).wav"
+    english_score = calculate_overall_score(english_transcription, total_seconds, audio_path)
+    print("\n=== Overall Score ANALYSIS ===")
     print(f"\nOVERALL SCORE: {english_score['score']}/100 - {english_score['rating']}")
     print(f"Feedback: {english_score['feedback']}")
     
