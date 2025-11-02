@@ -46,43 +46,43 @@ def transcribe_audio(path):
         text = r.recognize_google(audio_listened)
     return text
 
-def get_large_audio_transcription_on_silence(path):
-     # open the audio file using pydub
-    sound = AudioSegment.from_file(path)  
-    # split audio sound where silence is 700 miliseconds or more and get chunks
-    chunks = split_on_silence(sound,
-        # experiment with this value for your target audio file
-        min_silence_len = 500,
-        # adjust this per requirement
-        silence_thresh = sound.dBFS-14,
-        # keep the silence for 1 second, adjustable as well
-        keep_silence=500,
-    )
-    folder_name = "audio-chunks"
-    # create a directory to store the audio chunks
-    if not os.path.isdir(folder_name):
-        os.mkdir(folder_name)
-    whole_text = ""
-    # process each chunk 
-    for i, audio_chunk in enumerate(chunks, start=1):
-        # export audio chunk and save it in
-        # the `folder_name` directory.
-        chunk_filename = os.path.join(folder_name, f"chunk{i}.wav")
-        audio_chunk.export(chunk_filename, format="wav")
-        # recognize the chunk
-        with sr.AudioFile(chunk_filename) as source:
-            audio_listened = r.record(source)
-            # try converting it to text
-            try:
-                text = r.recognize_google(audio_listened)
-            except sr.UnknownValueError as e:
-                print("Error:", str(e))
-            else:
-                text = f"{text.capitalize()}. "
-                print(chunk_filename, ":", text)
-                whole_text += text
-    # return the text for all chunks detected
-    return whole_text
+# def get_large_audio_transcription_on_silence(path):
+#      # open the audio file using pydub
+#     sound = AudioSegment.from_file(path)  
+#     # split audio sound where silence is 700 miliseconds or more and get chunks
+#     chunks = split_on_silence(sound,
+#         # experiment with this value for your target audio file
+#         min_silence_len = 500,
+#         # adjust this per requirement
+#         silence_thresh = sound.dBFS-14,
+#         # keep the silence for 1 second, adjustable as well
+#         keep_silence=500,
+#     )
+#     folder_name = "audio-chunks"
+#     # create a directory to store the audio chunks
+#     if not os.path.isdir(folder_name):
+#         os.mkdir(folder_name)
+#     whole_text = ""
+#     # process each chunk 
+#     for i, audio_chunk in enumerate(chunks, start=1):
+#         # export audio chunk and save it in
+#         # the `folder_name` directory.
+#         chunk_filename = os.path.join(folder_name, f"chunk{i}.wav")
+#         audio_chunk.export(chunk_filename, format="wav")
+#         # recognize the chunk
+#         with sr.AudioFile(chunk_filename) as source:
+#             audio_listened = r.record(source)
+#             # try converting it to text
+#             try:
+#                 text = r.recognize_google(audio_listened)
+#             except sr.UnknownValueError as e:
+#                 print("Error:", str(e))
+#             else:
+#                 text = f"{text.capitalize()}. "
+#                 print(chunk_filename, ":", text)
+#                 whole_text += text
+#     # return the text for all chunks detected
+#     return whole_text
 
 # print(get_large_audio_transcription_on_silence("speakEase_backend_app/test_audio/record_out.wav"))
 
@@ -121,19 +121,53 @@ def get_transcription_whisper(audio_path, model, processor, language="english", 
   transcription = processor.batch_decode(predicted_ids, skip_special_tokens=skip_special_tokens)[0]
   return transcription
 
-def detect_mispronunciations(text):
-    words = text.lower().split()
-    mispronounced = []
-
-    for word in words:
-        phonemes = get_phonemes(word)
-        # If Whisper recognized word incorrectly → phonemes far from typical
-        similarity = phoneme_similarity(phonemes, get_phonemes(word))
-
-        if similarity < 0.55:  
-            mispronounced.append(word)
-
-    return mispronounced
+def detect_mispronunciations(english_transcription, expected_word):
+    transcribed_words = transcribed_words.lower().split()
+    expected_word = expected_word.lower()
+    
+    # Get phonemes for expected word
+    expected_phonemes = get_phonemes(expected_word)
+    
+    results = {
+        'mispronounced': False,
+        'transcribed_words': transcribed_words,
+        'similarity_scores': {},
+        'closest_match': None,
+        'highest_similarity': 0.0,
+        'feedback': ''
+    }
+    
+    # Compare each transcribed word against the expected word
+    for word in transcribed_words:
+        transcribed_phonemes = get_phonemes(word)
+        similarity = phoneme_similarity(expected_phonemes, transcribed_phonemes)
+        
+        # Store similarity score for this word
+        results['similarity_scores'][word] = round(similarity, 2)
+        
+        # Track the closest match
+        if similarity > results['highest_similarity']:
+            results['highest_similarity'] = similarity
+            results['closest_match'] = word
+    
+    # Determine if mispronounced (threshold: 0.55)
+    MISPRONUNCIATION_THRESHOLD = 0.55
+    
+    if results['highest_similarity'] < MISPRONUNCIATION_THRESHOLD:
+        results['mispronounced'] = True
+        results['feedback'] = (
+            f"❌ Expected '{expected_word}' but got '{results['closest_match']}' "
+            f"(similarity: {results['highest_similarity']}). "
+            f"Try pronouncing it more clearly."
+        )
+    else:
+        results['mispronounced'] = False
+        results['feedback'] = (
+            f"✓ Good pronunciation! '{expected_word}' matches "
+            f"'{results['closest_match']}' (similarity: {results['highest_similarity']})"
+        )
+    
+    return results
 
 if __name__ == "__main__":
     
@@ -146,7 +180,7 @@ if __name__ == "__main__":
                             skip_special_tokens=True)
     print("English transcription:", english_transcription)
     
-    english_mis = detect_mispronunciations(english_transcription)
+    english_mis = detect_mispronunciations(english_transcription , expected_word)
     print("English Mispronounced Words:", english_mis)
     
     arabic_transcription = get_transcription_whisper("speakEase_backend_app/test_audio/record_arabic.wav",
