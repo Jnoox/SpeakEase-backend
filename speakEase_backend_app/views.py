@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import TrainingSession,UserProfile, ProgressAnalytics, VocabularyWord
-from .serializers import TrainingSessionSerializer, UserSerializer,UserProfileSerializer, VocabularyWordSerializer
+from .models import TrainingSession,UserProfile, ProgressAnalytics, VocabularyWord, Tip
+from .serializers import TrainingSessionSerializer, UserSerializer,UserProfileSerializer, VocabularyWordSerializer, TipSerializer
 from rest_framework import generics,status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import get_user_model
@@ -322,4 +322,18 @@ class VocabularyView(APIView):
             return Response({'error': 'No words'}, status=status.HTTP_404_NOT_FOUND)
         
         serializer = VocabularyWordSerializer(word)
+        return Response(serializer.data)
+    
+
+# to get one random word for the voice training 
+class TipView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        tip = Tip.objects.order_by('?').first()
+        
+        if not tip:
+            return Response({'error': 'No tips'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = TipSerializer(tip)
         return Response(serializer.data)
