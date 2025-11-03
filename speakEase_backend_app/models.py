@@ -36,7 +36,7 @@ class TrainingSession(models.Model):
     audio_file = models.FileField(upload_to='audio/', null=True, blank=True)
     video_file = models.FileField(upload_to='videos/', null=True, blank=True)
     feedback_text = models.TextField(blank=True)
-
+    transcribed_text = models.TextField(blank=True)
     # performance metrics
     repeated_words = models.PositiveIntegerField(default=0)
     mispronunciations = models.PositiveIntegerField(default=0)

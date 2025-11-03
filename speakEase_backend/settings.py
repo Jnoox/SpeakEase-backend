@@ -35,6 +35,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -43,7 +44,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'speakEase_backend_app',
-    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -58,10 +58,10 @@ MIDDLEWARE = [
 ]
 
 # for CORS allow urls
-# CORS_ALLOWED_ORIGINS = [
-#     # will change in production
-#     "http://localhost:5173/",
-# ]
+CORS_ALLOWED_ORIGINS = [
+    # will change in production
+    "http://localhost:5173", "http://127.0.0.1:5173"
+]
 
 ROOT_URLCONF = 'speakEase_backend.urls'
 
@@ -146,13 +146,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # MEDIA_URL = '/media/'
 # MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Access environment variables
-SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = os.getenv('DEBUG')
-DATABASE_URL = os.getenv('DATABASE_URL')
+# # Load environment variables from .env file
+# load_dotenv()
 
 
 # for User Authentication and Authorization

@@ -10,7 +10,10 @@ from django.shortcuts import get_object_or_404
 from .ai_modules import audio_analyzer
 import os
 from rest_framework.parsers import MultiPartParser, FormParser
-
+from django.core.files.storage import default_storage
+import uuid
+from pathlib import Path
+from pydub import AudioSegment
 # Create your views here.
 
 User = get_user_model()
@@ -158,11 +161,10 @@ class AllUsersView(APIView):
 # for analysis the file upload
 class VoiceTrainingView(APIView):
     permission_classes = [IsAuthenticated]
-    permission_classes = [IsAuthenticated]
     parser_classes = (MultiPartParser, FormParser)
 
+    # Source helper: https://stackoverflow.com/questions/20473572/django-rest-framework-file-upload
     def post(self, request):
-        
             audio_file = request.FILES.get('audio_file')
             training_type = request.data.get('training_type', 'voice')
             duration = int(request.data.get('duration', 0))
@@ -173,20 +175,45 @@ class VoiceTrainingView(APIView):
             if duration <= 0:
                 return Response({'Duration must be greater than 0'}, status=status.HTTP_400_BAD_REQUEST)
             
-            # save the file 
-            temp_audio_path = f'/tmp/{audio_file.name}'
-            with open(temp_audio_path, 'wb+') as destination:
-                for chunk in audio_file.chunks():
-                    destination.write(chunk)
+            # Source helper : https://www.geeksforgeeks.org/python/how-to-get-file-extension-in-python/
+            # to get file extension
+            file_ext = Path(audio_file.name).suffix if audio_file.name else '.webm'
+            if not file_ext:
+                file_ext = '.webm'
             
-            # audio analysis transcript
+            file_ext = Path(audio_file.name).suffix if audio_file.name else '.webm'
+            # Source helper : https://www.geeksforgeeks.org/python/generating-random-ids-using-uuid-python/
+            # generate random id number for the saving audio files
+            temp_filename = f"temp_audio/{uuid.uuid4()}{file_ext}"
+            temp_path = default_storage.save(temp_filename, audio_file)
+            full_temp_path = default_storage.path(temp_path)
+            
+            wav_filename = f"temp_audio/{uuid.uuid4()}.wav"
+            wav_path = default_storage.path(wav_filename)
+            audio = AudioSegment.from_file(full_temp_path)
+            audio = audio.set_channels(1).set_frame_rate(16000)  # mono 16kHz
+            audio.export(wav_path, format="wav")
+            
+            default_storage.delete(temp_path)
+
+            # Transcribe audio using audio_analyzer from audio_analysis ai model
+            transcription_result = audio_analyzer.transcribe_audio(wav_path)
+            if not transcription_result or 'text' not in transcription_result:
+                default_storage.delete(wav_path)
+                return Response({'error': 'Transcription failed'}, status=status.HTTP_400_BAD_REQUEST)
+
+            transcribed_text = transcription_result['text']
+
+            
+            # audio analysis calculate_overall_score
             analysis_result = audio_analyzer.calculate_overall_score(
-                transcribed_text=audio_analyzer.transcribe_audio(temp_audio_path)['text'],
+                transcribed_text=transcribed_text,
                 audio_duration_seconds=duration,
-                audio_path=temp_audio_path
+                audio_path=  wav_path  
             )
             
             if not analysis_result:
+                default_storage.delete(wav_path)
                 return Response({'Analysis failed'}, status=status.HTTP_400_BAD_REQUEST)
             
             # it create new TrainingSession save the data to db
@@ -196,11 +223,11 @@ class VoiceTrainingView(APIView):
                 training_type=training_type,
                 duration=duration,
                 audio_file=audio_file,
-                score=analysis_result['score'],
+                score=analysis_result.get('score', 0),
                 mispronunciations=analysis_result.get('mis_pct', 0),
                 repeated_words=analysis_result.get('repeated', 0),
-                feedback_text=analysis_result['feedback'],
-                transcribed_text=audio_analyzer.transcribe_audio(temp_audio_path).get('text', '')
+                feedback_text=analysis_result.get('feedback', ''),
+                transcribed_text= transcribed_text 
             )
             
             profile = UserProfile.objects.get(user=request.user)
@@ -213,7 +240,7 @@ class VoiceTrainingView(APIView):
             response_data = {
                 **serializer.data,
                 'analysis': {
-                    'wpm': analysis_result.get('wpm'),
+                    'wpm': analysis_result.get('wpm', 0),
                     'rating': analysis_result.get('rating'),
                     'word_practiced': word,
                 }
@@ -245,13 +272,20 @@ class TrainingSessionView(APIView):
         
     #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# # def get_object(self, user, session_id):
+# def get_object(self, user, session_id):
 #         try:
 #             return TrainingSession.objects.get(id=session_id, user=user)
 #         except TrainingSession.DoesNotExist:
 #             return None
+
 class TrainingSessionDetailView(APIView):
     permission_classes = [IsAuthenticated]
+    
+    def get_object(self, user, session_id):
+        try:
+            return TrainingSession.objects.get(id=session_id, user=user)
+        except TrainingSession.DoesNotExist:
+            return None
     
     def get(self, request, session_id):
         session = self.get_object(request.user, session_id)

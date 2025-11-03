@@ -21,3 +21,5 @@ test_audio/
 
 # Other
 *.sqlite3
+
+temp_audio/
