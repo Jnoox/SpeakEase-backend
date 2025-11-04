@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import TrainingSession,UserProfile, ProgressAnalytics, VocabularyWord, Tip
-from .serializers import TrainingSessionSerializer, UserSerializer,UserProfileSerializer, VocabularyWordSerializer, TipSerializer
+from .serializers import TrainingSessionSerializer, UserSerializer,UserProfileSerializer, VocabularyWordSerializer, TipSerializer, ProgressAnalyticsSerializer
 from rest_framework import generics,status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import get_user_model
@@ -89,6 +89,7 @@ class CurrentUserView(APIView):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
+# to do (post)
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -259,25 +260,6 @@ class TrainingSessionView(APIView):
         serializer = TrainingSessionSerializer(sessions, many=True)
         return Response(serializer.data)
     
-    # # Create new training session for the user
-    # def post(self, request):
-        
-    #     data = request.data.copy()
-    #     data['user'] = request.user.id
-        
-    #     serializer = TrainingSessionSerializer(data=data)
-    #     if serializer.is_valid():
-    #         serializer.save(user=request.user)
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# def get_object(self, user, session_id):
-#         try:
-#             return TrainingSession.objects.get(id=session_id, user=user)
-#         except TrainingSession.DoesNotExist:
-#             return None
-
 class TrainingSessionDetailView(APIView):
     permission_classes = [IsAuthenticated]
     
@@ -293,17 +275,7 @@ class TrainingSessionDetailView(APIView):
             return Response({'error': 'Training session not found'}, status=status.HTTP_404_NOT_FOUND)
         serializer = TrainingSessionSerializer(session)
         return Response(serializer.data)
-
-    # def put(self, request, session_id):
-    #     session = self.get_object(request.user, session_id)
-    #     if not session:
-    #         return Response({'error': 'Training session not found'}, status=status.HTTP_404_NOT_FOUND)
-    #     serializer = TrainingSessionSerializer(session, data=request.data, partial=True)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+    
     def delete(self, request, session_id):
         session = self.get_object(request.user, session_id)
         if not session:
@@ -325,7 +297,8 @@ class VocabularyView(APIView):
         return Response(serializer.data)
     
 
-# to get one random word for the voice training 
+# to get one random word for the voice training \
+# to do : (delete - put - post)
 class TipView(APIView):
     permission_classes = [AllowAny]
 
@@ -337,3 +310,17 @@ class TipView(APIView):
         
         serializer = TipSerializer(tip)
         return Response(serializer.data)
+    
+class ProgressAnalyticsView(APIView):
+     permission_classes = [IsAuthenticated]
+     
+     def get(self, request):
+        try:
+            Progress_Analytics = ProgressAnalytics.objects.get(user=request.user)
+            serializer = ProgressAnalyticsSerializer(Progress_Analytics)
+            return Response(serializer.data)
+        except ProgressAnalytics.DoesNotExist:
+            return Response(
+                {'error': 'Progress Analytics not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
