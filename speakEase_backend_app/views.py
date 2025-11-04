@@ -17,7 +17,7 @@ from pydub import AudioSegment
 # Create your views here.
 
 User = get_user_model()
-
+# source helper: https://www.bezkoder.com/django-rest-api/
 # this for User SignUp
 class UserSignUpView(APIView):
     
@@ -237,19 +237,43 @@ class VoiceTrainingView(APIView):
             # and save it to the db
             profile.save()
             
+            
+            
+            Progress_Analytics = ProgressAnalytics.objects.get(user=request.user)
+            # update total_sessions
+            Progress_Analytics.total_sessions = Progress_Analytics.total_sessions + 1 
+            Progress_Analytics.total_training_time = Progress_Analytics.total_training_time + duration
+            
+            # to get all user sessions
+            all_sessions = TrainingSession.objects.filter(user=request.user)
+            # loop and save all scores for the user in TrainingSession
+            scores = []
+            for session in all_sessions:
+                score = session.score
+                scores.append(score)
+                
+            #source helper: https://stackoverflow.com/questions/64692048/how-to-get-average-highest-and-lowest-values-of-input-values
+            if scores:
+                Progress_Analytics.average_score = sum(scores) / len(scores)
+                Progress_Analytics.best_score = max(scores)
+                Progress_Analytics.worst_score = min(scores)
+                
+            # save all data and analysis in ProgressAnalytics db
+            Progress_Analytics.save()
+            
             serializer = TrainingSessionSerializer(training_session)
             response_data = {
                 **serializer.data,
                 'analysis': {
                     'wpm': analysis_result.get('wpm', 0),
                     'rating': analysis_result.get('rating'),
-                    'word_practiced': word,
+                    'word': word,
                 }
             }
             
             return Response(response_data, status=status.HTTP_201_CREATED)
         
-            
+              
 class TrainingSessionView(APIView):
 
     permission_classes = [IsAuthenticated]
