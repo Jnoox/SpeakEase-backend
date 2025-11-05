@@ -1,8 +1,10 @@
+.env
 # Python environment
 venv/
 venv310/
-env/
+.env
 ENV/
+
 
 # Bytecode
 __pycache__/

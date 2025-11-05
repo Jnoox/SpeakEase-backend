@@ -14,5 +14,5 @@ urlpatterns = [
    path('training-sessions/<int:session_id>/', TrainingSessionDetailView.as_view(), name='training-session-detail'),
    path('vocabulary/', VocabularyView.as_view(), name='vocabulary'),
    path('tip/', TipView.as_view(), name='tip'),
-   path('api/progress/', ProgressAnalyticsView.as_view(), name='progress-analytics'),
+   path('progress/', ProgressAnalyticsView.as_view(), name='progress-analytics'),
 ]

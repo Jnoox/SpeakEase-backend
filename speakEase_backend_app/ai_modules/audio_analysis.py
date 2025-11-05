@@ -58,7 +58,6 @@ whisper_processor = WhisperProcessor.from_pretrained(whisper_model_name)
 whisper_model = WhisperForConditionalGeneration.from_pretrained(whisper_model_name).to(device)
 
 def load_audio(audio_path):
-  """Load the audio file & convert to 16,000 sampling rate"""
   # load our wav file
   speech, sr = librosa.load(audio_path, sr=16000)
   speech = librosa.util.normalize(speech) 
