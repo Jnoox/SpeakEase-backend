@@ -7,6 +7,8 @@ import os
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
 import numpy as np
+import pronouncing
+
 
 from transformers import WhisperProcessor, WhisperForConditionalGeneration
 import torch
@@ -86,8 +88,10 @@ def detect_mispronunciations(transcribed_text):
     for word in transcribed_words:
         word_clean = word.lower().strip('.,!?;:')
         
-        if word_clean not in pronouncing_dict:
-            mispronounced.append(word_clean) 
+        phones = pronouncing.phones_for_word(word_clean)
+        
+        if not phones:      
+            mispronounced.append(word_clean)
         else:
             valid_words.append(word_clean)
             
@@ -172,13 +176,15 @@ def calculate_speech_rate(transcribed_text, audio_duration_seconds):
     
 
 # source helper: https://github.com/ahmedayman9/Audio-Silence-Detection-and-Pause-Percentage-Calculation/blob/main/Pauses%20detection.ipynb
-def detect_pauses(audio_path, threshold=0.01):
+def detect_pauses(audio_path, threshold=0.005):
     try:
         # Load audio file
         y, sr_val = librosa.load(audio_path)
         energy = librosa.feature.rms(y=y)
         
+        #silence less sensitive 
         silence_indices = np.where(energy < threshold)[1]
+        
         silence_times = librosa.frames_to_time(silence_indices, sr=sr_val)
         frame_duration = librosa.get_duration(y=y, sr=sr_val) / len(energy[0])
         
@@ -231,12 +237,12 @@ def calculate_overall_score(transcribed_text, audio_duration_seconds, audio_path
     
     if pa:
         pauses = pa['pauses_percentage']
-    if pauses > 30:
-        score -= 10  
-    elif pauses > 15:
-        score -= 5   
-    elif pauses > 5:
-        score -= 2   
+    if pauses > 40:
+        score -= 5 
+    elif pauses > 25:
+        score -= 3   
+    elif pauses > 10:
+        score -= 1  
             
     if audio_duration_seconds > 0:
         ratio = mis['total_words'] / audio_duration_seconds
@@ -304,7 +310,9 @@ def calculate_overall_score(transcribed_text, audio_duration_seconds, audio_path
         'mis_pct': round(mis_pct, 2),
         'wpm': wpm,
         'repeated': rep['total_repeated'],
-        'pauses_percentage': pa['pauses_percentage'] if pa else 0
+        'pauses_percentage': pa['pauses_percentage'] if pa else 0,
+        'mispronounced_words': mis['mispronounced_words'],
+        'repeated_words': rep['repeated_words'],
     }
 
 # to return calculate_overall_score and transcribe_audio to use it in the view

@@ -268,6 +268,9 @@ class VoiceTrainingView(APIView):
                     'wpm': analysis_result.get('wpm', 0),
                     'rating': analysis_result.get('rating'),
                     'word': word,
+                    'mispronounced_words': analysis_result.get('mispronounced_words', []),
+                    'repeated_words': analysis_result.get('repeated_words', []),
+                    'pauses_percentage': analysis_result.get('pauses_percentage'),
                 }
             }
             

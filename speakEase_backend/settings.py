@@ -31,7 +31,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
 DEBUG = os.getenv("DEBUG") == "True"
 
 
@@ -146,15 +145,10 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# # when uploads an audio or video or image(for the profile page) file from the frontend, it will be saved inside: /media for example 
-# # when user uploads voice file it will store in (media/audio/voice1.wav)
 # BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # MEDIA_URL = '/media/'
 # MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# # Load environment variables from .env file
-# load_dotenv()
 
 
 # for User Authentication and Authorization
