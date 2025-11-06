@@ -75,40 +75,40 @@ Delete: DELETE /api/tips/:id - Admin deletes tips.
 ## 🎯 Key Features
 ### AI-Powered Voice Analysis:
 
-- Transcription: Uses Whisper AI to convert speech to text with high accuracy.
+Transcription: Uses Whisper AI to convert speech to text with high accuracy.
 
-- WPM Calculation: Measures speaking speed (words per minute).
+WPM Calculation: Measures speaking speed (words per minute).
 
-- Pronunciation Analysis: Detects mispronounced words.
+Pronunciation Analysis: Detects mispronounced words.
 
-- Repetition Detection: Identifies frequently repeated words.
+Repetition Detection: Identifies frequently repeated words.
 
-- Pause Analysis: Calculates pause percentages in speech.
+Pause Analysis: Calculates pause percentages in speech.
 
-- Scoring System: Provides overall performance score (0-100).
+Scoring System: Provides overall performance score (0-100).
 
 
 ### Progress Tracking:
 
-- Automatic calculation of average, best, and worst scores.
+Automatic calculation of average, best, and worst scores.
 
-- Total training time tracking across all sessions.
+Total training time tracking across all sessions.
 
-- Session history management with detailed analytics.
+Session history management with detailed analytics.
 
-- Real-time updates after each training session.
+Real-time updates after each training session.
 
 ### Security Features
 
-- JWT-based authentication with access and refresh tokens.
+JWT-based authentication with access and refresh tokens.
 
-- Password hashing using Django's built-in security.
+Password hashing using Django's built-in security.
 
-- Protected API endpoints with permission classes.
+Protected API endpoints with permission classes.
 
-- CORS configuration for secure frontend access.
+CORS configuration for secure frontend access.
 
-- Admin-only routes for sensitive operations.
+Admin-only routes for sensitive operations.
 
 ### Admin Panel Features:
 
