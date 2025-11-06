@@ -322,7 +322,7 @@ class VocabularyView(APIView):
         return Response(serializer.data)
     
 
-# to get one random word for the voice training \
+# to get one random word for the voice training 
 # to do : (delete - put - post)
 class TipView(APIView):
     permission_classes = [AllowAny]
@@ -335,6 +335,89 @@ class TipView(APIView):
         
         serializer = TipSerializer(tip)
         return Response(serializer.data)
+    
+class TipView(APIView):
+    permission_classes = [AllowAny]  # GET is public
+
+    def get(self, request):
+        """Get random tip (public)"""
+        tip = Tip.objects.order_by('?').first()
+        
+        if not tip:
+            return Response({'error': 'No tips'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = TipSerializer(tip)
+        return Response(serializer.data)
+
+
+class TipListView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        if not request.user.is_staff:
+            return Response({'error': 'Admin only'}, status=status.HTTP_403_FORBIDDEN)
+        
+        tips = Tip.objects.all()
+        serializer = TipSerializer(tips, many=True)
+        return Response(serializer.data)
+    
+    def post(self, request):
+        """Create new tip"""
+        if not request.user.is_staff:
+            return Response({'error': 'Admin only'}, status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = TipSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TipDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get_object(self, tip_id):
+        try:
+            return Tip.objects.get(id=tip_id)
+        except Tip.DoesNotExist:
+            return None
+    
+    def get(self, request, tip_id):
+        if not request.user.is_staff:
+            return Response({'error': 'Admin only'}, status=status.HTTP_403_FORBIDDEN)
+        
+        tip = self.get_object(tip_id)
+        if not tip:
+            return Response({'error': 'Tip not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = TipSerializer(tip)
+        return Response(serializer.data)
+    
+    def put(self, request, tip_id):
+        if not request.user.is_staff:
+            return Response({'error': 'Admin only'}, status=status.HTTP_403_FORBIDDEN)
+        
+        tip = self.get_object(tip_id)
+        if not tip:
+            return Response({'error': 'Tip not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = TipSerializer(tip, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, tip_id):
+        if not request.user.is_staff:
+            return Response({'error': 'Admin only'}, status=status.HTTP_403_FORBIDDEN)
+        
+        tip = self.get_object(tip_id)
+        if not tip:
+            return Response({'error': 'Tip not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        tip.delete()
+        return Response({'message': 'Tip deleted'}, status=status.HTTP_204_NO_CONTENT)
+    
     
 class ProgressAnalyticsView(APIView):
      permission_classes = [IsAuthenticated]
