@@ -3,7 +3,7 @@
 ### SpeakEase
 
 ### 🎯 Project Description:
-SpeakEase is an interactive web platform designed to help individuals who struggle with speaking fluently and expressing themselves. The platform uses AI-powered analysis of voice and facial expressions to improve:
+SpeakEase Backend is a Django REST Framework API that powers an AI-driven platform designed to help individuals improve their speaking fluency and communication skills. The backend handles user authentication, voice analysis, training session management, and progress tracking.
 
 - Pronunciation accuracy
 - Speaking confidence

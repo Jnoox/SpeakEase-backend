@@ -43,17 +43,8 @@ def transcribe_audio(path):
         # try converting it to text
         text = r.recognize_google(audio_listened)
     return text
-
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
-# whisper_model_name = "openai/whisper-tiny.en" # English-only, ~ 151 MB
-# whisper_model_name = "openai/whisper-base.en" # English-only, ~ 290 MB
-# whisper_model_name = "openai/whisper-small.en" # English-only, ~ 967 MB
-# whisper_model_name = "openai/whisper-medium.en" # English-only, ~ 3.06 GB
 whisper_model_name = "openai/whisper-small" 
-# whisper_model_name = "openai/whisper-base" # multilingual, ~ 290 MB
-# whisper_model_name = "openai/whisper-small" # multilingual, ~ 967 MB
-# whisper_model_name = "openai/whisper-medium" # multilingual, ~ 3.06 GB
-# whisper_model_name = "openai/whisper-large-v2" # multilingual, ~ 6.17 GB
 
 # load the model and the processor
 whisper_processor = WhisperProcessor.from_pretrained(whisper_model_name)
@@ -118,13 +109,10 @@ def get_audio_duration(audio_path):
         return 0, 0, 0
 
 def detect_repeated_words(transcribed_text):
-    """Detect repeated words using Counter"""
     words = transcribed_text.lower().split()
-    
     # Common stop words to ignore
     stop_words = {'the', 'a', 'an', 'and', 'or', 'is', 'are', 'was', 'were', 
                   'be', 'been', 'of', 'in', 'to', 'for', 'i', 'you', 'he', 'she', 'it'}
-    
     # Remove stop words and punctuation
     filtered_words = []
     for word in words:
