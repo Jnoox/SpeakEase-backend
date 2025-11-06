@@ -107,10 +107,57 @@ Delete: DELETE /api/tips/:id - Admin deletes tips.
 
 ### Admin Panel Features:
 
-- Full CRUD operations on Tips model.
+Full CRUD operations on Tips model.
 
-- User management capabilities.
+User management capabilities.
 
-- Session monitoring and analytics.
+Session monitoring and analytics.
 
 Content management for vocabulary and tips.
+
+
+## IceBox Features:
+### Daily Conversation via Camera
+
+### Workflow:
+
+Opens camera interface for the user.
+
+Displays daily questions (e.g., “Describe yourself”).
+
+Each question lasts 5 minutes (total 15 minutes per session).
+
+AI facial analysis feedback includes:
+
+Facial expressions.
+
+Nervousness detection.
+
+Eye contact and engagement.
+
+Why: Visual feedback improves confidence and presentation skills.
+
+## User Goals Page
+
+### Workflow:
+
+Users can add personal speaking or confidence goals.
+
+CRUD operations on goals: create, read, update, delete.
+
+
+## AI Coach for Interview Training
+
+### Workflow:
+
+Records user video answering interview questions.
+
+AI analysis provides:
+
+Pronunciation & speech analysis (existing voice module).
+
+Facial expression & engagement feedback.
+
+NLP feedback on answer clarity and structure.
+
+Generates coaching report with improvement tips.
