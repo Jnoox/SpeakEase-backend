@@ -12,10 +12,15 @@ SpeakEase is an interactive web platform designed to help individuals who strugg
 ## Tech Stack
 
 Python 3.11
+
 Django 5.1
+
 Django REST Framework
+
 PostgreSQL
+
 Simple JWT (Authentication)
+
 AI/ML Libraries:
 
 - Whisper (OpenAI) - Speech recognition.
