@@ -323,7 +323,6 @@ class VocabularyView(APIView):
     
 
 # to get one random word for the voice training 
-# to do : (delete - put - post)
 class TipView(APIView):
     permission_classes = [AllowAny]
 
@@ -340,7 +339,6 @@ class TipView(APIView):
     permission_classes = [AllowAny]  # GET is public
 
     def get(self, request):
-        """Get random tip (public)"""
         tip = Tip.objects.order_by('?').first()
         
         if not tip:
@@ -362,7 +360,6 @@ class TipListView(APIView):
         return Response(serializer.data)
     
     def post(self, request):
-        """Create new tip"""
         if not request.user.is_staff:
             return Response({'error': 'Admin only'}, status=status.HTTP_403_FORBIDDEN)
         
