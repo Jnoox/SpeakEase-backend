@@ -119,7 +119,7 @@ Content management for vocabulary and tips.
 ## IceBox Features:
 ### Daily Conversation via Camera
 
-### Workflow:
+#### Workflow:
 
 Opens camera interface for the user.
 
@@ -137,18 +137,18 @@ Eye contact and engagement.
 
 Why: Visual feedback improves confidence and presentation skills.
 
-## User Goals Page
+### User Goals Page
 
-### Workflow:
+#### Workflow:
 
 Users can add personal speaking or confidence goals.
 
 CRUD operations on goals: create, read, update, delete.
 
 
-## AI Coach for Interview Training
+### AI Coach for Interview Training
 
-### Workflow:
+#### Workflow:
 
 Records user video answering interview questions.
 
