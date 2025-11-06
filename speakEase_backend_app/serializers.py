@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import TrainingSession, ProgressAnalytics, Tip, UserProfile, VocabularyWord,DailyQuestion
+from .models import TrainingSession, ProgressAnalytics, Tip, UserProfile, VocabularyWord
 
 User = get_user_model()
 
@@ -40,7 +40,3 @@ class VocabularyWordSerializer(serializers.ModelSerializer):
         model = VocabularyWord
         fields = '__all__'
         
-class DailyQuestionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DailyQuestion
-        fields = '__all__'

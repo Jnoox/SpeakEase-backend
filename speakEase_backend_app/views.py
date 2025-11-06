@@ -3,12 +3,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import TrainingSession,UserProfile, ProgressAnalytics, VocabularyWord, Tip
 from .serializers import TrainingSessionSerializer, UserSerializer,UserProfileSerializer, VocabularyWordSerializer, TipSerializer, ProgressAnalyticsSerializer
-from rest_framework import generics,status
+from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from .ai_modules import audio_analyzer
-import os
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.core.files.storage import default_storage
 import uuid
@@ -223,7 +221,7 @@ class VoiceTrainingView(APIView):
                 user=request.user,
                 training_type=training_type,
                 duration=duration,
-                audio_file=audio_file,
+                # audio_file=audio_file,
                 score=analysis_result.get('score', 0),
                 mispronunciations=analysis_result.get('mis_pct', 0),
                 repeated_words=analysis_result.get('repeated', 0),
@@ -273,7 +271,7 @@ class VoiceTrainingView(APIView):
                     'pauses_percentage': analysis_result.get('pauses_percentage'),
                 }
             }
-            
+            default_storage.delete(wav_path)
             return Response(response_data, status=status.HTTP_201_CREATED)
         
               
