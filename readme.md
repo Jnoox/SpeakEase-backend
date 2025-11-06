@@ -7,7 +7,7 @@ SpeakEase Backend is a Django REST Framework API that powers an AI-driven platfo
 
 ## Tech Stack
 
-Python 3.11
+Python 3.11/3.10
 
 Django 5.1
 
