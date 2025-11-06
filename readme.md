@@ -72,7 +72,7 @@ Update: PUT /api/tips/:id - Admin updates tip content.
 
 Delete: DELETE /api/tips/:id - Admin deletes tips.
 
-## Key Features
+## 🎯 Key Features
 ### AI-Powered Voice Analysis:
 
 - Transcription: Uses Whisper AI to convert speech to text with high accuracy.
@@ -121,7 +121,7 @@ Session monitoring and analytics.
 Content management for vocabulary and tips.
 
 
-## IceBox Features:
+## 🧊 IceBox Features:
 ### Daily Conversation via Camera
 
 #### Workflow:
