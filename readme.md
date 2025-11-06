@@ -5,10 +5,6 @@
 ### 🎯 Project Description:
 SpeakEase Backend is a Django REST Framework API that powers an AI-driven platform designed to help individuals improve their speaking fluency and communication skills. The backend handles user authentication, voice analysis, training session management, and progress tracking.
 
-- Pronunciation accuracy
-- Speaking confidence
-- Communication skills
-
 ## Tech Stack
 
 Python 3.11
