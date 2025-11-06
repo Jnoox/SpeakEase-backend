@@ -1,6 +1,6 @@
 # SpeakEase Backend
-### 💡 Project Name:
-#### SpeakEase
+## 💡 Project Name:
+### SpeakEase
 
 ### 🎯 Project Description:
 SpeakEase is an interactive web platform designed to help individuals who struggle with speaking fluently and expressing themselves. The platform uses AI-powered analysis of voice and facial expressions to improve:
@@ -9,33 +9,34 @@ SpeakEase is an interactive web platform designed to help individuals who strugg
 - Speaking confidence
 - Communication skills
 
-### Tech Stack
+## Tech Stack
 
-- Python 3.11
-- Django 5.1
-- Django REST Framework
-- PostgreSQL
-- Simple JWT (Authentication)
-- AI/ML Libraries:
+Python 3.11
+Django 5.1
+Django REST Framework
+PostgreSQL
+Simple JWT (Authentication)
+AI/ML Libraries:
 
-1.Whisper (OpenAI) - Speech recognition.
+- Whisper (OpenAI) - Speech recognition.
 
-2.librosa - Audio analysis.
+- librosa - Audio analysis.
 
-3.pydub - Audio processing.
+- pydub - Audio processing.
 
-4.NLTK - Natural language processing.
+- NLTK - Natural language processing.
 
-4.transformers - Hugging Face models.
+- transformers - Hugging Face models.
 
 
-### Frontend Repo Link
+## Frontend Repo Link
 https://github.com/Jnoox/SpeakEase-frontend
 
-### 📊 ERD Relationships:
+
+## 📊 ERD Relationships:
 ![alt text](image-6.png)
 
-### 🔁 RESTful Routing Table:
+## 🔁 RESTful Routing Table:
 ![alt text](image.png)
 ![alt text](image-1.png)
 ![alt text](image-2.png)
@@ -44,9 +45,9 @@ https://github.com/Jnoox/SpeakEase-frontend
 ![alt text](image-5.png)
 
 
-### ✅ Full CRUD Implementation (2 models)
+## ✅ Full CRUD Implementation (2 models)
 
-#### UserProfile (User-Based CRUD):
+### UserProfile (User-Based CRUD):
 
 Create: Automatically created during user signup.
 
@@ -56,7 +57,7 @@ Update: PUT /api/profile/ - Users update their full_name and age.
 
 Delete: DELETE /api/profile/ - Users delete their entire account.
 
-#### Tip Model (Admin-Based CRUD):
+### Tip Model (Admin-Based CRUD):
 
 Create: POST /api/tips/ - Admin creates new tips.
 
@@ -66,8 +67,8 @@ Update: PUT /api/tips/:id - Admin updates tip content.
 
 Delete: DELETE /api/tips/:id - Admin deletes tips.
 
-#### Key Features
-## AI-Powered Voice Analysis:
+## Key Features
+### AI-Powered Voice Analysis:
 
 - Transcription: Uses Whisper AI to convert speech to text with high accuracy.
 
@@ -82,7 +83,7 @@ Delete: DELETE /api/tips/:id - Admin deletes tips.
 - Scoring System: Provides overall performance score (0-100).
 
 
-## Progress Tracking:
+### Progress Tracking:
 
 - Automatic calculation of average, best, and worst scores.
 
@@ -92,7 +93,7 @@ Delete: DELETE /api/tips/:id - Admin deletes tips.
 
 - Real-time updates after each training session.
 
-## Security Features
+### Security Features
 
 - JWT-based authentication with access and refresh tokens.
 
@@ -104,7 +105,7 @@ Delete: DELETE /api/tips/:id - Admin deletes tips.
 
 - Admin-only routes for sensitive operations.
 
-## Admin Panel Features:
+### Admin Panel Features:
 
 - Full CRUD operations on Tips model.
 
